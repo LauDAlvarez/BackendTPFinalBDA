@@ -1,0 +1,400 @@
+# 📚 Documentación de API - Dashboard de Ventas
+
+## 🔐 Autenticación
+
+### 1. Login
+**Endpoint:** `POST /api/auth/login`
+
+**Body:**
+```json
+{
+  "usuario": "admin",
+  "contraseña": "admin123"
+}
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Login exitoso",
+  "user": {
+    "id": 1,
+    "usuario": "admin",
+    "mail": "admin@dashboard.com",
+    "fechaCreacion": "2025-10-08T12:00:00.000Z"
+  }
+}
+```
+
+**Respuesta error (401):**
+```json
+{
+  "success": false,
+  "message": "Usuario o contraseña incorrectos"
+}
+```
+
+---
+
+### 2. Register
+**Endpoint:** `POST /api/auth/register`
+
+**Body:**
+```json
+{
+  "usuario": "nuevo_usuario",
+  "contraseña": "password123",
+  "mail": "usuario@email.com"
+}
+```
+
+**Respuesta exitosa (201):**
+```json
+{
+  "success": true,
+  "message": "Usuario registrado exitosamente",
+  "user": {
+    "id": 5,
+    "usuario": "nuevo_usuario",
+    "mail": "usuario@email.com"
+  }
+}
+```
+
+**Respuestas de error:**
+- **409:** Usuario o email ya registrado
+- **400:** Datos faltantes o formato inválido
+
+---
+
+## 👥 Gestión de Usuarios
+
+### 3. Obtener Todos los Usuarios
+**Endpoint:** `GET /api/users`
+
+**Respuesta exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Usuarios obtenidos exitosamente",
+  "count": 4,
+  "users": [
+    {
+      "id": 1,
+      "usuario": "admin",
+      "mail": "admin@dashboard.com",
+      "fechaCreacion": "2025-10-08T12:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "usuario": "gerente_centro",
+      "mail": "centro@dashboard.com",
+      "fechaCreacion": "2025-10-08T13:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Ejemplo de uso con curl:**
+```bash
+curl http://localhost:3001/api/users
+```
+
+**Ejemplo con JavaScript/Axios:**
+```javascript
+const response = await axios.get('http://localhost:3001/api/users');
+console.log(response.data.users);
+```
+
+---
+
+### 4. Obtener Usuario por ID
+**Endpoint:** `GET /api/users/:id`
+
+**Parámetros:**
+- `id` (number) - ID del usuario
+
+**Ejemplo:** `GET /api/users/1`
+
+**Respuesta exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Usuario obtenido exitosamente",
+  "user": {
+    "id": 1,
+    "usuario": "admin",
+    "mail": "admin@dashboard.com",
+    "fechaCreacion": "2025-10-08T12:00:00.000Z"
+  }
+}
+```
+
+**Respuesta error (404):**
+```json
+{
+  "success": false,
+  "message": "Usuario no encontrado"
+}
+```
+
+---
+
+### 5. Buscar Usuarios
+**Endpoint:** `GET /api/users/search?search=termino`
+
+**Query Parameters:**
+- `search` (string) - Término de búsqueda (busca en usuario y email)
+
+**Ejemplo:** `GET /api/users/search?search=admin`
+
+**Respuesta exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Búsqueda completada",
+  "count": 1,
+  "users": [
+    {
+      "id": 1,
+      "usuario": "admin",
+      "mail": "admin@dashboard.com",
+      "fechaCreacion": "2025-10-08T12:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Ejemplo de uso:**
+```bash
+curl "http://localhost:3001/api/users/search?search=admin"
+```
+
+---
+
+### 6. Obtener Estadísticas
+**Endpoint:** `GET /api/users/stats`
+
+**Respuesta exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Estadísticas obtenidas exitosamente",
+  "stats": {
+    "totalUsuarios": 6,
+    "nuevosUltimaSemana": 2,
+    "nuevosUltimoMes": 4
+  }
+}
+```
+
+---
+
+### 7. Actualizar Usuario
+**Endpoint:** `PUT /api/users/:id`
+
+**Parámetros:**
+- `id` (number) - ID del usuario a actualizar
+
+**Body (todos los campos son opcionales, pero al menos uno es requerido):**
+```json
+{
+  "usuario": "nuevo_nombre_usuario",
+  "mail": "nuevo@email.com"
+}
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Usuario actualizado exitosamente",
+  "user": {
+    "id": 5,
+    "usuario": "nuevo_nombre_usuario",
+    "mail": "nuevo@email.com",
+    "fechaCreacion": "2025-10-08T14:00:00.000Z"
+  }
+}
+```
+
+**Respuestas de error:**
+- **404:** Usuario no encontrado
+- **409:** Usuario o email ya en uso
+- **400:** Datos inválidos
+
+**Ejemplo con curl:**
+```bash
+curl -X PUT http://localhost:3001/api/users/5 \
+  -H "Content-Type: application/json" \
+  -d '{"mail":"nuevo@email.com"}'
+```
+
+---
+
+### 8. Cambiar Contraseña
+**Endpoint:** `PUT /api/users/:id/password`
+
+**Parámetros:**
+- `id` (number) - ID del usuario
+
+**Body:**
+```json
+{
+  "contraseñaActual": "password123",
+  "contraseñaNueva": "newpassword456"
+}
+```
+
+**Respuesta exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Contraseña cambiada exitosamente"
+}
+```
+
+**Respuestas de error:**
+- **401:** Contraseña actual incorrecta
+- **400:** Nueva contraseña muy corta (mínimo 8 caracteres)
+
+---
+
+### 9. Eliminar Usuario
+**Endpoint:** `DELETE /api/users/:id`
+
+**Parámetros:**
+- `id` (number) - ID del usuario a eliminar
+
+**⚠️ Restricción:** No se puede eliminar el usuario admin (ID 1)
+
+**Respuesta exitosa (200):**
+```json
+{
+  "success": true,
+  "message": "Usuario eliminado exitosamente"
+}
+```
+
+**Respuestas de error:**
+- **404:** Usuario no encontrado
+- **403:** No se puede eliminar el administrador
+
+**Ejemplo con curl:**
+```bash
+curl -X DELETE http://localhost:3001/api/users/5
+```
+
+---
+
+## 📊 Resumen de Endpoints
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | Iniciar sesión |
+| POST | `/api/auth/register` | Registrar nuevo usuario |
+| GET | `/api/users` | Obtener todos los usuarios |
+| GET | `/api/users/:id` | Obtener usuario por ID |
+| GET | `/api/users/search` | Buscar usuarios |
+| GET | `/api/users/stats` | Estadísticas de usuarios |
+| PUT | `/api/users/:id` | Actualizar usuario |
+| PUT | `/api/users/:id/password` | Cambiar contraseña |
+| DELETE | `/api/users/:id` | Eliminar usuario |
+
+---
+
+## 🧪 Colección de Pruebas Postman
+
+### Login
+```http
+POST http://localhost:3001/api/auth/login
+Content-Type: application/json
+
+{
+  "usuario": "admin",
+  "contraseña": "admin123"
+}
+```
+
+### Obtener Todos los Usuarios
+```http
+GET http://localhost:3001/api/users
+```
+
+### Buscar Usuario
+```http
+GET http://localhost:3001/api/users/search?search=admin
+```
+
+### Actualizar Usuario
+```http
+PUT http://localhost:3001/api/users/2
+Content-Type: application/json
+
+{
+  "mail": "nuevo_email@example.com"
+}
+```
+
+### Eliminar Usuario
+```http
+DELETE http://localhost:3001/api/users/5
+```
+
+---
+
+## 🔒 Códigos de Estado HTTP
+
+| Código | Significado |
+|--------|-------------|
+| 200 | OK - Petición exitosa |
+| 201 | Created - Recurso creado exitosamente |
+| 400 | Bad Request - Datos inválidos |
+| 401 | Unauthorized - Credenciales incorrectas |
+| 403 | Forbidden - Acción no permitida |
+| 404 | Not Found - Recurso no encontrado |
+| 409 | Conflict - Conflicto (ej: usuario duplicado) |
+| 500 | Internal Server Error - Error del servidor |
+
+---
+
+## 💡 Notas Importantes
+
+1. **Seguridad:** Las contraseñas nunca se devuelven en las respuestas
+2. **Formato de fechas:** ISO 8601 (YYYY-MM-DDTHH:mm:ss.sssZ)
+3. **Encriptación:** Las contraseñas se almacenan en Base64
+4. **Validaciones:** Todos los endpoints validan los datos de entrada
+5. **Protección:** El usuario admin (ID 1) no puede ser eliminado
+
+---
+
+## 🔧 Ejemplos de Integración Frontend
+
+### React/Next.js con Axios
+
+```typescript
+// Obtener todos los usuarios
+const getUsers = async () => {
+  const response = await axios.get('http://localhost:3001/api/users');
+  return response.data.users;
+};
+
+// Buscar usuarios
+const searchUsers = async (term: string) => {
+  const response = await axios.get(`http://localhost:3001/api/users/search?search=${term}`);
+  return response.data.users;
+};
+
+// Actualizar usuario
+const updateUser = async (id: number, data: any) => {
+  const response = await axios.put(`http://localhost:3001/api/users/${id}`, data);
+  return response.data;
+};
+
+// Eliminar usuario
+const deleteUser = async (id: number) => {
+  const response = await axios.delete(`http://localhost:3001/api/users/${id}`);
+  return response.data;
+};
+```
