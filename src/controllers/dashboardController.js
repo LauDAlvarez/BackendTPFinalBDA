@@ -1,7 +1,17 @@
-// backend/src/controllers/dashboardController.js
+﻿// backend/src/controllers/dashboardController.js
 // Controlador para los KPIs del Dashboard
 
 const db = require('../config/database');
+
+const executeQuery = (query, params = []) =>
+  new Promise((resolve, reject) => {
+    db.query(query, params, (error, results) => {
+      if (error) {
+        return reject(error);
+      }
+      resolve(results);
+    });
+  });
 
 // ==========================================
 // NIVEL 1 - GENERAL: KPIs Principales
@@ -17,7 +27,7 @@ const getGeneralKPIs = (req, res) => {
       -- Total de ventas acumuladas
       (SELECT COALESCE(SUM(Total), 0) FROM Compras) as ventasTotales,
       
-      -- Promedio mensual (últimos 30 días)
+      -- Promedio mensual (Ãºltimos 30 dÃ­as)
       (SELECT COALESCE(AVG(daily_total), 0) 
        FROM (
          SELECT DATE(Fecha) as date, SUM(Total) as daily_total 
@@ -41,19 +51,19 @@ const getGeneralKPIs = (req, res) => {
        AND YEAR(Fecha) = YEAR(DATE_SUB(NOW(), INTERVAL 1 MONTH))
       ) as ventasMesAnterior,
       
-      -- Número total de compras/transacciones
+      -- NÃºmero total de compras/transacciones
       (SELECT COUNT(*) FROM Compras) as totalTransacciones,
       
-      -- Número de sucursales
+      -- NÃºmero de sucursales
       (SELECT COUNT(*) FROM Sucursales) as totalSucursales,
       
-      -- Número de productos
+      -- NÃºmero de productos
       (SELECT COUNT(*) FROM Producto) as totalProductos
   `;
 
   db.query(query, (error, results) => {
     if (error) {
-      console.error('❌ Error al obtener KPIs generales:', error);
+      console.error('âŒ Error al obtener KPIs generales:', error);
       return res.status(500).json({
         success: false,
         message: 'Error al obtener los KPIs'
@@ -67,7 +77,7 @@ const getGeneralKPIs = (req, res) => {
       ? ((data.ventasMesActual - data.ventasMesAnterior) / data.ventasMesAnterior * 100).toFixed(2)
       : 0;
 
-    console.log('✅ KPIs generales obtenidos');
+    console.log('âœ… KPIs generales obtenidos');
 
     res.status(200).json({
       success: true,
@@ -91,7 +101,7 @@ const getGeneralKPIs = (req, res) => {
 // ==========================================
 
 /**
- * Obtener ranking de sucursales con semaforización
+ * Obtener ranking de sucursales con semaforizaciÃ³n
  */
 const getRankingSucursales = (req, res) => {
   const { fechaInicio, fechaFin } = req.query;
@@ -131,7 +141,7 @@ const getRankingSucursales = (req, res) => {
 
   db.query(query, params, (error, results) => {
     if (error) {
-      console.error('❌ Error al obtener ranking de sucursales:', error);
+      console.error('âŒ Error al obtener ranking de sucursales:', error);
       return res.status(500).json({
         success: false,
         message: 'Error al obtener el ranking'
@@ -141,13 +151,13 @@ const getRankingSucursales = (req, res) => {
     // Calcular el total general para porcentajes
     const totalGeneral = results.reduce((sum, s) => sum + parseFloat(s.ventasTotales), 0);
 
-    // Agregar semaforización a cada sucursal
+    // Agregar semaforizaciÃ³n a cada sucursal
     const sucursalesConSemaforo = results.map((sucursal, index) => {
       const porcentajeDelTotal = totalGeneral > 0 
         ? (parseFloat(sucursal.ventasTotales) / totalGeneral * 100).toFixed(2)
         : 0;
 
-      // Lógica de semaforización
+      // LÃ³gica de semaforizaciÃ³n
       let estado;
       let color;
       if (parseFloat(porcentajeDelTotal) >= 30) {
@@ -172,7 +182,7 @@ const getRankingSucursales = (req, res) => {
       };
     });
 
-    console.log('✅ Ranking de sucursales obtenido');
+    console.log('âœ… Ranking de sucursales obtenido');
 
     res.status(200).json({
       success: true,
@@ -183,11 +193,11 @@ const getRankingSucursales = (req, res) => {
 };
 
 // ==========================================
-// Ventas por Categoría
+// Ventas por CategorÃ­a
 // ==========================================
 
 /**
- * Obtener ventas agrupadas por categoría de producto
+ * Obtener ventas agrupadas por categorÃ­a de producto
  */
 const getVentasPorCategoria = (req, res) => {
   const { sucursalId, fechaInicio, fechaFin } = req.query;
@@ -200,7 +210,7 @@ const getVentasPorCategoria = (req, res) => {
   if (sucursalId && Number.isNaN(sucursalIdNumber)) {
     return res.status(400).json({
       success: false,
-      message: 'ID de sucursal inválido'
+      message: 'ID de sucursal invÃ¡lido'
     });
   }
 
@@ -238,10 +248,10 @@ const getVentasPorCategoria = (req, res) => {
 
   db.query(query, params, (error, results) => {
     if (error) {
-      console.error('❌ Error al obtener ventas por categoría:', error);
+      console.error('âŒ Error al obtener ventas por categorÃ­a:', error);
       return res.status(500).json({
         success: false,
-        message: 'Error al obtener ventas por categoría'
+        message: 'Error al obtener ventas por categorÃ­a'
       });
     }
 
@@ -252,25 +262,45 @@ const getVentasPorCategoria = (req, res) => {
       ingresoTotal: parseFloat(r.ingresoTotal)
     }));
 
-    console.log('✅ Ventas por categoría obtenidas');
+    console.log('âœ… Ventas por categorÃ­a obtenidas');
 
     res.status(200).json({
       success: true,
-      message: 'Ventas por categoría obtenidas exitosamente',
+      message: 'Ventas por categorÃ­a obtenidas exitosamente',
       data: datosFormateados
     });
   });
 };
 
 // ==========================================
-// Top Productos Más Vendidos
+// Top Productos MÃ¡s Vendidos
 // ==========================================
 
 /**
- * Obtener los productos más vendidos
+ * Obtener los productos mÃ¡s vendidos
  */
 const getTopProductos = (req, res) => {
-  const { limit = 10 } = req.query;
+  const { limit = 10, sucursalId, fechaInicio, fechaFin } = req.query;
+
+  const filters = [];
+  const params = [];
+
+  if (sucursalId && !isNaN(Number(sucursalId))) {
+    filters.push('c.Sucursal_Id = ?');
+    params.push(Number(sucursalId));
+  }
+
+  if (fechaInicio) {
+    filters.push('c.Fecha >= ?');
+    params.push(fechaInicio);
+  }
+
+  if (fechaFin) {
+    filters.push('c.Fecha < DATE_ADD(?, INTERVAL 1 DAY)');
+    params.push(fechaFin);
+  }
+
+  const whereClause = filters.length ? `WHERE ${filters.join(' AND ')}` : '';
 
   const query = `
     SELECT 
@@ -284,17 +314,19 @@ const getTopProductos = (req, res) => {
     FROM Producto p
     JOIN Categoria cat ON p.Categoria_Id = cat.Id
     JOIN Detalle_Compra dc ON p.Id = dc.Producto_Id
+    JOIN Compras c ON dc.Compra_Id = c.Id
+    ${whereClause}
     GROUP BY p.Id, p.Nombre, cat.Nombre, p.Precio_Uni
     ORDER BY unidadesVendidas DESC
     LIMIT ?
   `;
 
-  db.query(query, [parseInt(limit)], (error, results) => {
+  db.query(query, [...params, parseInt(limit)], (error, results) => {
     if (error) {
-      console.error('❌ Error al obtener top productos:', error);
+      console.error('âŒ Error al obtener top productos:', error);
       return res.status(500).json({
         success: false,
-        message: 'Error al obtener productos más vendidos'
+        message: 'Error al obtener productos mÃ¡s vendidos'
       });
     }
 
@@ -304,7 +336,7 @@ const getTopProductos = (req, res) => {
       ingresoTotal: parseFloat(r.ingresoTotal)
     }));
 
-    console.log('✅ Top productos obtenidos');
+    console.log('âœ… Top productos obtenidos');
 
     res.status(200).json({
       success: true,
@@ -315,11 +347,11 @@ const getTopProductos = (req, res) => {
 };
 
 // ==========================================
-// Ventas por Período (para gráficos)
+// Ventas por PerÃ­odo (para grÃ¡ficos)
 // ==========================================
 
 /**
- * Obtener ventas agrupadas por día/semana/mes
+ * Obtener ventas agrupadas por dÃ­a/semana/mes
  */
 const getVentasPorPeriodo = (req, res) => {
   const { periodo = 'dia', dias = 30 } = req.query;
@@ -336,7 +368,7 @@ const getVentasPorPeriodo = (req, res) => {
       groupBy = 'YEARWEEK(Fecha)';
       dateFormat = "DATE_FORMAT(Fecha, '%Y-%m-%d')";
       break;
-    default: // día
+    default: // dÃ­a
       groupBy = 'DATE(Fecha)';
       dateFormat = "DATE(Fecha)";
   }
@@ -355,10 +387,10 @@ const getVentasPorPeriodo = (req, res) => {
 
   db.query(query, [parseInt(dias)], (error, results) => {
     if (error) {
-      console.error('❌ Error al obtener ventas por período:', error);
+      console.error('âŒ Error al obtener ventas por perÃ­odo:', error);
       return res.status(500).json({
         success: false,
-        message: 'Error al obtener ventas por período'
+        message: 'Error al obtener ventas por perÃ­odo'
       });
     }
 
@@ -369,14 +401,196 @@ const getVentasPorPeriodo = (req, res) => {
       ticketPromedio: parseFloat(r.ticketPromedio)
     }));
 
-    console.log('✅ Ventas por período obtenidas');
+    console.log('âœ… Ventas por perÃ­odo obtenidas');
 
     res.status(200).json({
       success: true,
-      message: 'Ventas por período obtenidas exitosamente',
+      message: 'Ventas por perÃ­odo obtenidas exitosamente',
       data: datosFormateados
     });
   });
+};
+/**
+ * Obtener KPIs y productos vendidos por un vendedor específico
+ */
+const getVendedorDetalle = async (req, res) => {
+  const { id } = req.params;
+  const { fechaInicio, fechaFin } = req.query;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({
+      success: false,
+      message: 'ID de vendedor invA�lido'
+    });
+  }
+
+  const dateFilters = [];
+  const dateParams = [];
+
+  if (fechaInicio) {
+    dateFilters.push('c.Fecha >= ?');
+    dateParams.push(fechaInicio);
+  }
+
+  if (fechaFin) {
+    dateFilters.push('c.Fecha < DATE_ADD(?, INTERVAL 1 DAY)');
+    dateParams.push(fechaFin);
+  }
+
+  const dateClause = dateFilters.length ? ` AND ${dateFilters.join(' AND ')}` : '';
+
+  try {
+    const vendedorRows = await executeQuery(
+      `
+        SELECT 
+          v.Id as id,
+          v.Nombre as nombre,
+          v.Apellido as apellido,
+          v.Dni as dni,
+          v.Sucursal_Id as sucursalId,
+          s.Nombre as sucursalNombre,
+          s.Ubicacion as sucursalUbicacion
+        FROM Vendedores v
+        JOIN Sucursales s ON v.Sucursal_Id = s.Id
+        WHERE v.Id = ?
+      `,
+      [id]
+    );
+
+    if (!vendedorRows.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vendedor no encontrado'
+      });
+    }
+
+    const vendedor = vendedorRows[0];
+
+    const ventasRows = await executeQuery(
+      `
+        SELECT 
+          COALESCE(SUM(c.Total), 0) as ventasTotales,
+          COUNT(c.Id) as numeroVentas,
+          COALESCE(AVG(c.Total), 0) as ticketPromedio
+        FROM Compras c
+        WHERE c.Vendedor_Id = ?${dateClause}
+      `,
+      [id, ...dateParams]
+    );
+
+    const productoStatsRows = await executeQuery(
+      `
+        SELECT 
+          COALESCE(SUM(dc.Cantidad), 0) as unidadesVendidas,
+          COUNT(DISTINCT dc.Producto_Id) as productosVendidos
+        FROM Detalle_Compra dc
+        JOIN Compras c ON dc.Compra_Id = c.Id
+        WHERE c.Vendedor_Id = ?${dateClause}
+      `,
+      [id, ...dateParams]
+    );
+
+    const timelineRows = await executeQuery(
+      `
+        SELECT 
+          MIN(c.Fecha) as primeraVenta,
+          MAX(c.Fecha) as ultimaVenta
+        FROM Compras c
+        WHERE c.Vendedor_Id = ?${dateClause}
+      `,
+      [id, ...dateParams]
+    );
+
+    const sucursalVentasRows = await executeQuery(
+      `
+        SELECT COALESCE(SUM(c.Total), 0) as ventasSucursal
+        FROM Compras c
+        WHERE c.Sucursal_Id = ?${dateClause}
+      `,
+      [vendedor.sucursalId, ...dateParams]
+    );
+
+    const productosRows = await executeQuery(
+      `
+        SELECT 
+          p.Id as id,
+          p.Nombre as nombre,
+          p.Descripcion as descripcion,
+          cat.Nombre as categoria,
+          p.Precio_Uni as precioUnitario,
+          SUM(dc.Cantidad) as unidadesVendidas,
+          SUM(dc.Cantidad * dc.Precio_Compra) as ingresoTotal,
+          COUNT(DISTINCT dc.Compra_Id) as numeroTransacciones
+        FROM Detalle_Compra dc
+        JOIN Producto p ON dc.Producto_Id = p.Id
+        JOIN Categoria cat ON p.Categoria_Id = cat.Id
+        JOIN Compras c ON dc.Compra_Id = c.Id
+        WHERE c.Vendedor_Id = ?${dateClause}
+        GROUP BY p.Id, p.Nombre, p.Descripcion, cat.Nombre, p.Precio_Uni
+        ORDER BY ingresoTotal DESC
+        LIMIT 12
+      `,
+      [id, ...dateParams]
+    );
+
+    const ventasData = ventasRows[0] || {
+      ventasTotales: 0,
+      numeroVentas: 0,
+      ticketPromedio: 0
+    };
+    const productoStats = productoStatsRows[0] || {
+      unidadesVendidas: 0,
+      productosVendidos: 0
+    };
+    const timeline = timelineRows[0] || {
+      primeraVenta: null,
+      ultimaVenta: null
+    };
+    const ventasSucursal = sucursalVentasRows[0]?.ventasSucursal || 0;
+    const participacion =
+      ventasSucursal > 0
+        ? parseFloat(((ventasData.ventasTotales / ventasSucursal) * 100).toFixed(2))
+        : 0;
+
+    const productos = productosRows.map((producto) => ({
+      ...producto,
+      precioUnitario: parseFloat(producto.precioUnitario),
+      ingresoTotal: parseFloat(producto.ingresoTotal)
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: 'Detalle de vendedor obtenido exitosamente',
+      data: {
+        vendedor: {
+          id: vendedor.id,
+          nombre: vendedor.nombre,
+          apellido: vendedor.apellido,
+          dni: vendedor.dni,
+          sucursalId: vendedor.sucursalId,
+          sucursalNombre: vendedor.sucursalNombre,
+          sucursalUbicacion: vendedor.sucursalUbicacion
+        },
+        stats: {
+          ventasTotales: parseFloat(ventasData.ventasTotales || 0),
+          numeroVentas: ventasData.numeroVentas || 0,
+          ticketPromedio: parseFloat(ventasData.ticketPromedio || 0),
+          unidadesVendidas: Number(productoStats.unidadesVendidas || 0),
+          productosVendidos: Number(productoStats.productosVendidos || 0),
+          participacionSucursal: participacion,
+          primeraVenta: timeline.primeraVenta,
+          ultimaVenta: timeline.ultimaVenta
+        },
+        productos
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener detalle del vendedor:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener detalle del vendedor'
+    });
+  }
 };
 
 // Exportar todas las funciones
@@ -385,5 +599,7 @@ module.exports = {
   getRankingSucursales,
   getVentasPorCategoria,
   getTopProductos,
-  getVentasPorPeriodo
+  getVentasPorPeriodo,
+  getVendedorDetalle
 };
+

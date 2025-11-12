@@ -25,6 +25,10 @@ router.get('/categorias', dashboardController.getVentasPorCategoria);
 // Top productos más vendidos
 router.get('/productos/top', dashboardController.getTopProductos);
 
+// GET /api/dashboard/vendedores/:id/detalle
+// KPIs y ventas por vendedor (Nivel 3/4)
+router.get('/vendedores/:id/detalle', dashboardController.getVendedorDetalle);
+
 // GET /api/dashboard/ventas/periodo?periodo=dia&dias=30
 // Ventas por período (para gráficos)
 router.get('/ventas/periodo', dashboardController.getVentasPorPeriodo);
